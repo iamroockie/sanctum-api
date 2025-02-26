@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Response as IlluminateResponse;
 
 class Response
 {
-    public static function success(array $data, int $code = 200): HttpResponse
+    public static function success(array $data, int $code = 200, $headers = []): HttpResponse
     {
-        return IlluminateResponse::make(self::build(true, $data, $code), $code);
+        return IlluminateResponse::make(self::build(true, $data, $code), $code, $headers);
     }
 
     protected static function build(bool $success, mixed $data, int $code): array
@@ -21,8 +21,8 @@ class Response
         return $response;
     }
 
-    public static function fail(array $data, int $code): HttpResponse
+    public static function fail(array $data, int $code, $headers = []): HttpResponse
     {
-        return IlluminateResponse::make(self::build(false, $data, $code), $code);
+        return IlluminateResponse::make(self::build(false, $data, $code), $code, $headers);
     }
 }
