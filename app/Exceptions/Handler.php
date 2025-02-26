@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use App\Support\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -35,6 +36,7 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
         return [
             NotFoundHttpException::class => 'handleNotFound',
             MethodNotAllowedHttpException::class => 'handleNotSupportHttpMethod',
+            ValidationException::class => 'handleValidation',
         ];
     }
 
@@ -56,5 +58,13 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
         }
 
         return Response::fail(compact('message'), HttpResponse::HTTP_METHOD_NOT_ALLOWED, $headers);
+    }
+
+    protected function handleValidation(ValidationException $e): \Illuminate\Http\Response
+    {
+        return Response::fail([
+            'message' => 'Ошибка валидации.',
+            'errors' => $e->errors(),
+        ], HttpResponse::HTTP_UNPROCESSABLE_ENTITY);
     }
 }
