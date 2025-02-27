@@ -6,6 +6,7 @@ use App\Support\Response;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,7 +27,7 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
         return Response::fail(
             [
                 'message' => $e->getMessage(),
-                'exception' => class_basename($e),
+                'exception' => $e::class,
             ],
             $e->getCode() ?: HttpResponse::HTTP_INTERNAL_SERVER_ERROR
         );
@@ -40,6 +41,7 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
             ValidationException::class => 'handleValidation',
             AuthenticationException::class => 'handleAuthentication',
             AlreadyAuthenticatedException::class => 'handleAlreadyAuthenticated',
+            RuntimeException::class => 'handleRuntimeException',
         ];
     }
 
@@ -79,5 +81,10 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
     protected function handleAlreadyAuthenticated(): \Illuminate\Http\Response
     {
         return Response::fail(['message' => 'Вход уже выполнен ранее.'], HttpResponse::HTTP_FORBIDDEN);
+    }
+
+    protected function handleRuntimeException(): \Illuminate\Http\Response
+    {
+        return Response::fail(['message' => 'Внутрення ошибка.'], HttpResponse::HTTP_INTERNAL_SERVER_ERROR);
     }
 }
