@@ -41,7 +41,7 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
             ValidationException::class => 'handleValidation',
             AuthenticationException::class => 'handleAuthentication',
             AlreadyAuthenticatedException::class => 'handleAlreadyAuthenticated',
-            RuntimeException::class => 'handleRuntimeException',
+            // RuntimeException::class => 'handleRuntimeException',
         ];
     }
 
