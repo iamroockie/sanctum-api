@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Support\Response;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -14,13 +15,13 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
 {
     public function render($request, Throwable $e)
     {
-        // Log::error($e->getMessage());
-
         foreach ($this->handlers() as $exceptionType => $handler) {
             if ($e instanceof $exceptionType && method_exists($this, $handler)) {
-                return $this->$handler($e);
+                return $this->$handler($e, $request);
             }
         }
+
+        Log::error($e->getMessage());
 
         return Response::fail(
             [
@@ -37,12 +38,14 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
             NotFoundHttpException::class => 'handleNotFound',
             MethodNotAllowedHttpException::class => 'handleNotSupportHttpMethod',
             ValidationException::class => 'handleValidation',
+            AuthenticationException::class => 'handleAuthentication',
+            AlreadyAuthenticatedException::class => 'handleAlreadyAuthenticated',
         ];
     }
 
-    protected function handleNotFound(NotFoundHttpException $e): \Illuminate\Http\Response
+    protected function handleNotFound(NotFoundHttpException $e, $request): \Illuminate\Http\Response
     {
-        $message = 'Ресурс не найден.';
+        $message = 'Ресурс не найден. '.$request->getPathInfo();
 
         return Response::fail(compact('message'), HttpResponse::HTTP_NOT_FOUND);
     }
@@ -66,5 +69,15 @@ class Handler extends \Illuminate\Foundation\Exceptions\Handler
             'message' => 'Ошибка валидации.',
             'errors' => $e->errors(),
         ], HttpResponse::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    protected function handleAuthentication(): \Illuminate\Http\Response
+    {
+        return Response::fail(['message' => 'Ошибка аутентификации.'], HttpResponse::HTTP_UNAUTHORIZED);
+    }
+
+    protected function handleAlreadyAuthenticated(): \Illuminate\Http\Response
+    {
+        return Response::fail(['message' => 'Вход уже выполнен ранее.'], HttpResponse::HTTP_FORBIDDEN);
     }
 }
